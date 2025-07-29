@@ -1,19 +1,21 @@
+// server/routes/campaignRoutes.js
+
 const express = require('express');
-const router = express.Router();
+const router  = express.Router();
+const { verifyToken } = require('../middleware/authMiddleware');
 const {
-  getDefaultCampaign,
   getAllCampaigns,
-  createCampaign
+  createCampaign,
+  getDefaultCampaign   // ← we need this
 } = require('../controllers/campaignController');
-const verifyToken = require('../middleware/authMiddleware');
 
-// GET /api/campaigns/default?length=8
-router.get('/default', getDefaultCampaign);
-
-// GET /api/campaigns
+// Public: list user‐created campaigns
 router.get('/', getAllCampaigns);
 
-// POST /api/campaigns (protected)
+// Protected: submit your own custom campaign
 router.post('/', verifyToken, createCampaign);
+
+// **This** is the default “procedural” campaign endpoint:
+router.get('/default', getDefaultCampaign);
 
 module.exports = router;

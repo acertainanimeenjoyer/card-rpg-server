@@ -6,7 +6,7 @@ const CampaignSchema = new mongoose.Schema({
     description: String,
     rooms: [{
         roomType: { type: String, enum: ['Attacker', 'Loot', 'Merchant', 'Event'] },
-        enemies: [mongoose.Schema.Types.ObjectId],
+        enemies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Enemy' }],
         lootTable: [String], // just a list of item names
         events: [String] // simple text or effect ID
     }]

@@ -1,38 +1,56 @@
+// server/server.js
+
+require('dotenv').config();               // Load .env variables first
 const express = require('express');
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const cors = require('cors');
-const cardRoutes = require('./routes/cardRoutes');
-const campaignRoutes = require('./routes/campaignRoutes');
-const enemyRoutes = require('./routes/enemyRoutes');
-const gameRoutes = require('./routes/gameRoutes');
+const path = require('path');
 
-app.use('/api/cards', cardRoutes);
-app.use('/api/campaigns', campaignRoutes);
-app.use('/api/enemies', enemyRoutes);
-app.use('/api/game', gameRoutes);
-
-
-// Load environment variables
-dotenv.config();
-
-const authRoutes = require('./routes/authRoutes');
-
-// App setup
+// Create the Express app
 const app = express();
-app.use(express.json());
-app.use(cors());
 
-// Routes
-app.use('/api/auth', authRoutes);
+// ➡️ Middleware
+app.use(express.json());                  // Parse JSON bodies
 
-// Connect DB and start server
+// ➡️ Database connection (adjust URI in .env as MONGO_URI)
 mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-}).then(() => {
-    console.log('🧪 MongoDB connected');
-    app.listen(process.env.PORT || 5000, () =>
-        console.log(`🚀 Server running on port ${process.env.PORT}`)
-    );
-}).catch(err => console.error('❌ MongoDB error:', err));
+  // optional mongoose options
+})
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+// ➡️ Route imports
+const gameRoutes     = require('./routes/gameRoutes');
+const campaignRoutes = require('./routes/campaignRoutes');
+const cardRoutes     = require('./routes/cardRoutes');     // if you have one
+const authRoutes     = require('./routes/authRoutes');     // updated
+
+// ➡️ Mount routes
+app.use('/api/auth',    authRoutes);
+app.use('/api/game',    gameRoutes);
+app.use('/api/campaigns', campaignRoutes);
+app.use('/api/cards',   cardRoutes);                       // mount your card editor API
+
+// ➡️ (Optional) Serve React build in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/build')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+  });
+}
+
+// ➡️ Root health-check
+app.get('/', (req, res) => {
+  res.send('🎮 Card RPG Server is running');
+});
+
+// ➡️ Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// ➡️ Start server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});
